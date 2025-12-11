@@ -219,119 +219,223 @@
       Подсчёт основан на энтропии и приблизительной скорости перебора. Это ориентир, а не абсолютная гарантия.
     </div>
   </div>
-  <script>
+<script>
+
 const pwInput = document.getElementById("password");
+
 const entropyEl = document.getElementById("entropy");
+
 const timeEl = document.getElementById("crack-time");
+
 const strengthBar = document.getElementById("strength-bar");
+
 const verdict = document.getElementById("verdict");
+
 const advice = document.getElementById("advice");
 
-// чеклист (элементы должны быть в HTML)
+
+
 const checklist = {
-  lowercase: document.getElementById("check-lower"),
-  uppercase: document.getElementById("check-upper"),
-  digits: document.getElementById("check-digit"),
-  symbols: document.getElementById("check-symbol"),
-  length: document.getElementById("check-length")
+
+lowercase: document.getElementById("check-lower"),
+
+uppercase: document.getElementById("check-upper"),
+
+digits: document.getElementById("check-digit"),
+
+symbols: document.getElementById("check-symbol"),
+
+length: document.getElementById("check-length")
+
 };
 
-// словарь слабых паролей
+
+
 const commonWords = ["password","qwerty","123456","123456789","onetwothreefour","admin","welcome","iloveyou"];
 
+
+
 function updateChecklist(password) {
-  checklist.lowercase.className = /[a-z]/.test(password) ? "yes" : "no";
-  checklist.uppercase.className = /[A-Z]/.test(password) ? "yes" : "no";
-  checklist.digits.className = /[0-9]/.test(password) ? "yes" : "no";
-  checklist.symbols.className = /[^A-Za-z0-9]/.test(password) ? "yes" : "no";
-  checklist.length.className = password.length >= 8 ? "yes" : "no";
+
+checklist.lowercase.className = /[a-z]/.test(password) ? "yes" : "no";
+
+checklist.uppercase.className = /[A-Z]/.test(password) ? "yes" : "no";
+
+checklist.digits.className = /[0-9]/.test(password) ? "yes" : "no";
+
+checklist.symbols.className = /[^A-Za-z0-9]/.test(password) ? "yes" : "no";
+
+checklist.length.className = password.length >= 8 ? "yes" : "no";
+
 }
+
+
 
 function charsetSize(password) {
-  let size = 0;
-  if (/[a-z]/.test(password)) size += 26;
-  if (/[A-Z]/.test(password)) size += 26;
-  if (/[0-9]/.test(password)) size += 10;
-  if (/[^A-Za-z0-9]/.test(password)) size += 33;
-  return size || 1;
+
+let size = 0;
+
+if (/[a-z]/.test(password)) size += 26;
+
+if (/[A-Z]/.test(password)) size += 26;
+
+if (/[0-9]/.test(password)) size += 10;
+
+if (/[^A-Za-z0-9]/.test(password)) size += 33;
+
+return size || 1;
+
 }
+
+
 
 function entropy(password) {
-  const N = charsetSize(password);
-  const L = password.length;
-  let H = L * Math.log2(N);
 
-  // штрафы
-  if (commonWords.includes(password.toLowerCase())) H *= 0.5;
-  if (/([a-z]{4,}|[0-9]{4,})/.test(password.toLowerCase())) H *= 0.75;
-  if (/(.)\1{2,}/.test(password)) H *= 0.8;
+const N = charsetSize(password);
 
-  return H;
+const L = password.length;
+
+let H = L * Math.log2(N);
+
+
+
+if (commonWords.includes(password.toLowerCase())) H *= 0.5;
+
+if (/([a-z]{4,}|[0-9]{4,})/.test(password.toLowerCase())) H *= 0.75;
+
+if (/(.)\1{2,}/.test(password)) H *= 0.8;
+
+
+
+return H;
+
 }
+
+
 
 function humanTime(seconds) {
-  if (seconds < 1) return "менее секунды";
-  const units = [
-    ["секунд", 1],
-    ["минут", 60],
-    ["часов", 3600],
-    ["дней", 86400],
-    ["лет", 31557600],
-    ["веков", 31557600*100]
-  ];
-  for (let i = units.length-1; i >= 0; i--) {
-    const [name, step] = units[i];
-    const val = seconds/step;
-    if (val >= 1) return `${val.toFixed(2)} ${name}`;
-  }
-  return `${seconds.toFixed(2)} секунд`;
+
+if (seconds < 1) return "менее секунды";
+
+const units = [
+
+["секунд", 1],
+
+["минут", 60],
+
+["часов", 3600],
+
+["дней", 86400],
+
+["лет", 31557600],
+
+["веков", 31557600*100]
+
+];
+
+for (let i = units.length-1; i >= 0; i--) {
+
+const [name, step] = units[i];
+
+const val = seconds/step;
+
+if (val >= 1) return `${val.toFixed(2)} ${name}`;
+
 }
+
+return `${seconds.toFixed(2)} секунд`;
+
+}
+
+
 
 function evaluatePassword() {
-  const password = pwInput.value;
-  updateChecklist(password);
 
-  if (!password) {
-    verdict.textContent = "";
-    entropyEl.textContent = "";
-    timeEl.textContent = "";
-    advice.textContent = "";
-    strengthBar.style.width = "0%";
-    return;
-  }
+const password = pwInput.value;
 
-  const H = entropy(password);
-  const guesses = Math.pow(2, H);
-  const offlineFast = guesses / 1e10; // быстрый перебор
-  const score = H < 25 ? 1 : H < 40 ? 2 : H < 60 ? 3 : 4;
+updateChecklist(password);
 
-  const labels = ["Критически слабый","Слабый","Средний","Хороший","Отличный"];
-  verdict.textContent = labels[score];
-  entropyEl.textContent = `Энтропия: ${H.toFixed(1)} бит`;
-  timeEl.textContent = `Время взлома (быстрый перебор): ${humanTime(offlineFast)}`;
 
-  const widths = [15,35,60,80,100];
-  const colors = ["#ff4d4f","#ff7a45","#ffb020","#6ee7b7","#22c55e"];
-  strengthBar.style.width = widths[score] + "%";
-  strengthBar.style.background = colors[score];
 
-  let tips = [];
-  if (password.length < 8) tips.push("Добавь длину (минимум 12 символов).");
-  if (!/[A-Z]/.test(password)) tips.push("Добавь заглавные буквы.");
-  if (!/[0-9]/.test(password)) tips.push("Добавь цифры.");
-  if (!/[^A-Za-z0-9]/.test(password)) tips.push("Добавь спецсимволы.");
-  if (commonWords.includes(password.toLowerCase())) tips.push("Не используй словарные слова.");
-  if (/(.)\1{2,}/.test(password)) tips.push("Избегай длинных повторов.");
-  if (/([a-z]{4,}|[0-9]{4,})/.test(password.toLowerCase())) tips.push("Избегай последовательностей вроде 'abcd' или '1234'.");
+if (!password) {
 
-  advice.textContent = tips.length ? tips.join(" ") : "Пароль выглядит надёжно.";
+verdict.textContent = "";
+
+entropyEl.textContent = "";
+
+timeEl.textContent = "";
+
+advice.textContent = "";
+
+strengthBar.style.width = "0%";
+
+return;
+
 }
 
+
+
+const H = entropy(password);
+
+const guesses = Math.pow(2, H);
+
+const offlineFast = guesses / 1e10;
+
+const score = H < 25 ? 1 : H < 40 ? 2 : H < 60 ? 3 : 4;
+
+
+
+const labels = ["Критически слабый","Слабый","Средний","Хороший","Отличный"];
+
+verdict.textContent = labels[score];
+
+entropyEl.textContent = `Энтропия: ${H.toFixed(1)} бит`;
+
+timeEl.textContent = `Время взлома: ${humanTime(offlineFast)}`;
+
+
+
+const widths = [15,35,60,80,100];
+
+const colors = ["#ff4d4f","#ff7a45","#ffb020","#6ee7b7","#22c55e"];
+
+strengthBar.style.width = widths[score] + "%";
+
+strengthBar.style.background = colors[score];
+
+
+
+let tips = [];
+
+if (password.length < 8) tips.push("Добавь длину (минимум 12 символов).");
+
+if (!/[A-Z]/.test(password)) tips.push("Добавь заглавные буквы.");
+
+if (!/[0-9]/.test(password)) tips.push("Добавь цифры.");
+
+if (!/[^A-Za-z0-9]/.test(password)) tips.push("Добавь спецсимволы.");
+
+if (commonWords.includes(password.toLowerCase())) tips.push("Не используй словарные слова.");
+
+if (/(.)\1{2,}/.test(password)) tips.push("Избегай длинных повторов.");
+
+if (/([a-z]{4,}|[0-9]{4,})/.test(password.toLowerCase())) tips.push("Избегай последовательностей вроде 'abcd' или '1234'.");
+
+
+
+advice.textContent = tips.length ? tips.join(" ") : "Пароль выглядит надёжно.";
+
+}
+
+
+
 pwInput.addEventListener("input", evaluatePassword);
+
 </script>
   
 </body>
 </html>
+
 
 
 
