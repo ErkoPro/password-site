@@ -4,21 +4,6 @@
   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-44W8FGBJVJ"></script>
 <script>
-  async function checkLeak(password) {
-  try {
-    const response = await fetch("http://127.0.0.1:5000/api/check", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password })
-    });
-
-    const result = await response.json();
-    return result;
-  } catch (e) {
-    console.error("Ошибка подключения к API:", e);
-    return { breached: 0 };
-  }
-}
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -257,35 +242,6 @@
     });
 
     pwd.addEventListener('input', async () => {
-  const val = pwd.value;
-
-  const analysis = analyzePassword(val);
-
-  // ВЫЗЫВАЕМ BACKEND !!!
-  const apiData = await checkLeak(val);
-
-  console.log("🔍 Утечки найдено:", apiData.breached);
-
-  toggleDot(reqLen, val.length >= 8);
-  toggleDot(reqLower, analysis.hasLower);
-  toggleDot(reqUpper, analysis.hasUpper);
-  toggleDot(reqNum, analysis.hasDigit);
-  toggleDot(reqSym, analysis.hasSymbol);
-
-  meterFill.style.width = ${analysis.score}%;
-  strengthLabel.textContent = analysis.strengthText;
-  strengthLabel.className = strength ${analysis.strengthClass};
-
-  entropyBadge.textContent = Энтропия: ${analysis.entropyBits.toFixed(1)} бита;
-
-  crackTimeEl.textContent = formatCrackTime(analysis.guesses, analysis.gps);
-
-  if (apiData.breached > 0) {
-    reviewText.textContent = ⚠️ Этот пароль был найден в утечках ${apiData.breached} раз. НЕ ИСПОЛЬЗУЙ ЕГО!;
-  } else {
-    reviewText.textContent = analysis.review + " (пароль НЕ найден в утечках)";
-  }
-});
       const val = pwd.value;
       const analysis = analyzePassword(val);
 
@@ -387,6 +343,7 @@
   </script>
 </body>
 </html>
+
 
 
 
