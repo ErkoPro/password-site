@@ -221,6 +221,21 @@
   </div>
 
   <script>
+    async function checkLeak(password) {
+  try {
+    const response = await fetch("http://127.0.0.1:5000/api/check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password })
+    });
+
+    const result = await response.json();
+    return result;
+  } catch (e) {
+    console.error("Ошибка подключения к API:", e);
+    return { breached: 0 };
+  }
+}
     const pwd = document.getElementById('pwd');
     const show = document.getElementById('show');
 
@@ -342,6 +357,7 @@
   </script>
 </body>
 </html>
+
 
 
 
