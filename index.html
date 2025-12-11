@@ -176,6 +176,9 @@
   </style>
 </head>
 <body>
+  <input type="password" id="password" placeholder="Введите пароль">
+<button onclick="checkPassword()">Проверить</button>
+<p id="result"></p>
   <div class="container">
     <header>
       <div class="brand">PasswordCheckerFromErko</div>
@@ -221,7 +224,6 @@
   </div>
 
   <script>
-    
     const pwd = document.getElementById('pwd');
     const show = document.getElementById('show');
 
@@ -340,14 +342,23 @@
       }
       return `${amount.toFixed(amount >= 10 ? 0 : 1)} ${chosen.name}`;
     }
+    function checkPassword() {
+  const password = document.getElementById("password").value;
+
+  fetch("https://password-backend-c6l6.onrender.com/check", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ password: password })
+  })
+  .then(response => response.json())
+  .then(data => {
+    document.getElementById("result").innerText = "Надёжность: " + data.strength;
+  })
+  .catch(error => {
+    document.getElementById("result").innerText = "Ошибка соединения с сервером";
+    console.error(error);
+  });
+}
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
