@@ -4,6 +4,21 @@
   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-44W8FGBJVJ"></script>
 <script>
+  async function checkLeak(password) {
+  try {
+    const response = await fetch("http://127.0.0.1:5000/api/check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password })
+    });
+
+    const result = await response.json();
+    return result;
+  } catch (e) {
+    console.error("Ошибка подключения к API:", e);
+    return { breached: 0 };
+  }
+}
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
@@ -221,21 +236,7 @@
   </div>
 
   <script>
-    async function checkLeak(password) {
-  try {
-    const response = await fetch("http://127.0.0.1:5000/api/check", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password })
-    });
-
-    const result = await response.json();
-    return result;
-  } catch (e) {
-    console.error("Ошибка подключения к API:", e);
-    return { breached: 0 };
-  }
-}
+    
     const pwd = document.getElementById('pwd');
     const show = document.getElementById('show');
 
@@ -386,6 +387,7 @@
   </script>
 </body>
 </html>
+
 
 
 
