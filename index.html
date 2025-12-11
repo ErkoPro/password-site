@@ -342,23 +342,7 @@
       }
       return `${amount.toFixed(amount >= 10 ? 0 : 1)} ${chosen.name}`;
     }
-    function checkPassword() {
-  const password = document.getElementById("password").value;
-
-  fetch("https://password-backend-c6l6.onrender.com/check", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ password: password })
-  })
-  .then(response => response.json())
-  .then(data => {
-    document.getElementById("result").innerText = "Надёжность: " + data.strength;
-  })
-  .catch(error => {
-    document.getElementById("result").innerText = "Ошибка соединения с сервером";
-    console.error(error);
-  });
-}
   </script>
 </body>
 </html>
+
