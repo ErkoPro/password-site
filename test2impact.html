@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>PasswordCheckerFromErko</title>
+  <style>
+    .card {
+  transition: transform 0.4s ease, opacity 0.4s ease;
+  opacity: 0.95;
+}
+.meter-fill {
+  transition: width 0.3s ease-in-out;
+}
+.review {
+  transition: opacity 0.3s ease;
+}
+.card {
+  box-shadow: 0 0 12px rgba(147, 51, 234, 0.3);
+}
+button:hover {
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+}
+
+    #particles-js {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  top: 0; left: 0;
+  background: #0f172a;
+}
+    :root {
+      --bg: #0f172a; --card: #111827; --text: #e5e7eb;
+      --muted: #9ca3af; --green: #22c55e; --yellow: #f59e0b;
+      --red: #ef4444; --blue: #3b82f6;
+    }
+    body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-family: Inter, system-ui, sans-serif;
+  color: var(--text);
+
+  background: linear-gradient(-45deg, #3f2861, #170a2b, #2c0550, #a855f7);
+  background-size: 400% 400%;
+  animation: gradientMove 15s ease infinite;
+}
+
+@keyframes gradientMove {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+    .container { max-width:860px; margin:0 auto; padding:48px 24px; }
+    .card {
+      background:rgba(17,24,39,0.75); backdrop-filter:blur(4px);
+      border:1px solid rgba(255,255,255,0.06); border-radius:14px;
+      padding:24px; box-shadow:0 8px 24px rgba(0,0,0,0.35);
+    }
+    .input-row { display:flex; gap:12px; margin-bottom:12px; }
+    input[type="password"],input[type="text"] {
+      flex:1; padding:12px; border-radius:10px;
+      border:1px solid rgba(255,255,255,0.08);
+      background:#0b1220; color:var(--text);
+    }
+    button {
+      padding:10px 14px; border-radius:10px;
+      border:1px solid var(--blue); background:var(--blue);
+      color:#fff; font-weight:600; cursor:pointer;
+    }
+    .meter { height:14px; border-radius:999px; background:rgba(255,255,255,0.08);
+      overflow:hidden; margin:12px 0; }
+    .meter-fill { height:100%; width:0%; transition:width .3s;
+      background:linear-gradient(90deg,#ef4444,#f59e0b 40%,#22c55e 75%,#16a34a);
+    }
+    .strength { font-weight:700; margin-top:8px; }
+    .strength--weak{color:var(--red);} .strength--medium{color:var(--yellow);}
+    .strength--strong{color:var(--green);}
+    .req-dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.18);margin-right:6px;}
+    .req-dot.ok{background:var(--green);}
+    .review{margin-top:14px;padding-top:12px;border-top:1px dashed rgba(255,255,255,0.12);}
+  </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+<div class="container">
+  <div class="card">
+    <h2>Какой у тебя надёжный пароль?</h2>
+<p>Пройди тест и узнай, сколько времени понадобится, чтобы его взломать.</p>
+    <div class="input-row">
+      <input type="password" id="password" placeholder="Введи свой пароль сюда">
+      <button id="toggleBtn">Показать</button>
+    </div>
+    <div class="meter"><div class="meter-fill" id="meterFill"></div></div>
+    <p id="entropy">Энтропия: —</p>
+    <p id="crack-time">Время взлома: —</p>
+    <p id="verdict" class="strength"></p>
+    <div>
+      <div><span id="req-length" class="req-dot"></span> Минимум 8 символов</div>
+      <div><span id="req-upper" class="req-dot"></span> Заглавные буквы</div>
+      <div><span id="req-lower" class="req-dot"></span> Строчные буквы</div>
+      <div><span id="req-digit" class="req-dot"></span> Цифры</div>
+      <div><span id="req-symbol" class="req-dot"></span> Символы (!@#...)</div>
+    </div>
+    <div id="advice" class="review"></div>
+  </div>
+</div>
+
+    <script>
+const pwInput=document.getElementById("password");
+const toggleBtn=document.getElementById("toggleBtn");
+const meterFill=document.getElementById("meterFill");
+const entropyEl=document.getElementById("entropy");
+const timeEl=document.getElementById("crack-time");
+const verdict=document.getElementById("verdict");
+const advice=document.getElementById("advice");
+
+const reqDots={
+  length:document.getElementById("req-length"),
+  upper:document.getElementById("req-upper"),
+  lower:document.getElementById("req-lower"),
+  digit:document.getElementById("req-digit"),
+  symbol:document.getElementById("req-symbol")
+};
+
+const commonWords=["password","qwerty","123456","123456789","onetwothreefour","admin","welcome","iloveyou","qwertyuiop","asdfghjkl","zxcvbn"];
+
+function updateReqs(pw){
+  reqDots.lower.classList.toggle("ok",/[a-z]/.test(pw));
+  reqDots.upper.classList.toggle("ok",/[A-Z]/.test(pw));
+  reqDots.digit.classList.toggle("ok",/[0-9]/.test(pw));
+  reqDots.symbol.classList.toggle("ok",/[^A-Za-z0-9]/.test(pw));
+  reqDots.length.classList.toggle("ok",pw.length>=8);
+}
+
+function charsetSize(pw){
+  let size=0;
+  if(/[a-z]/.test(pw)) size+=26;
+  if(/[A-Z]/.test(pw)) size+=26;
+  if(/[0-9]/.test(pw)) size+=10;
+  if(/[^A-Za-z0-9]/.test(pw)) size+=33;
+  return size||1;
+}
+
+function looksLikeLeet(word){
+  const map={'@':'a','4':'a','0':'o','1':'l','!':'i','3':'e','$':'s','5':'s'};
+  return word.toLowerCase().replace(/[@4013$5!]/g,c=>map[c]||c);
+}
+
+function hasSequences(pw){
+  const s=pw.toLowerCase();
+  const seqs=["abcdefghijklmnopqrstuvwxyz","qwertyuiop","asdfghjkl","zxcvbn","0123456789"];
+  for(const seq of seqs){
+    for(let i=0;i<seq.length-3;i++){
+      const chunk=seq.slice(i,i+4);
+      if(s.includes(chunk)||s.includes([...chunk].reverse().join(''))) return true;
+    }
+  }
+  return false;
+}
+
+function entropy(pw){
+  let H=pw.length*Math.log2(charsetSize(pw));
+  const normalized=looksLikeLeet(pw);
+  if(commonWords.includes(pw.toLowerCase())||commonWords.includes(normalized)) H*=0.5;
+  if(hasSequences(pw)) H*=0.75;
+  if(/(.)\1{2,}/.test(pw)) H*=0.8;
+  if(/[0-9]/.test(pw)) H+=5;
+  if(/[^A-Za-z0-9]/.test(pw)) H+=7;
+  if(/[A-Z]/.test(pw)) H+=3;
+  return Math.max(H,1);
+}
+
+function humanTime(sec){
+  if(sec<1) return "менее секунды";
+  const units=[["секунд",1],["минут",60],["часов",3600],["дней",86400],["лет",31557600],["веков",31557600*100]];
+  for(let i=units.length-1;i>=0;i--){
+    const [name,step]=units[i]; const val=sec/step;
+    if(val>=1) return `${val.toFixed(2)} ${name}`;
+  }
+  return `${sec.toFixed(2)} секунд`;
+}
+
+function evaluatePassword(){
+  const pw=pwInput.value;
+  updateReqs(pw);
+  if(!pw){
+    meterFill.style.width="0%";
+    entropyEl.textContent="Энтропия: —";
+    timeEl.textContent="Время взлома: —";
+    verdict.textContent="";
+    advice.textContent="";
+    return;
+  }
+  const H=entropy(pw);
+  const guesses=Math.pow(2,H);
+  const offlineFast=guesses/1e10;
+  const score=H<25?1:H<40?2:H<60?3:4;
+  const labels=["Критически слабый","Слабый","Средний","Хороший","Отличный"];
+  verdict.textContent=labels[score];
+  verdict.className="strength "+(score<=1?"strength--weak":score==2?"strength--medium":"strength--strong");
+  entropyEl.textContent=`Энтропия: ${H.toFixed(1)} бит`;
+  timeEl.textContent=`Время взлома: ${humanTime(offlineFast)}`;
+  meterFill.style.width=[15,35,60,80,100][score]+"%";
+  const tips=[];
+  if(pw.length<8) tips.push("Добавь длину (минимум 8 символов).");
+  if(!/[A-Z]/.test(pw)) tips.push("Добавь заглавные буквы.");
+  if(!/[0-9]/.test(pw)) tips.push("Добавь цифры.");
+  if(!/[^A-Za-z0-9]/.test(pw)) tips.push("Добавь спецсимволы.");
+  const normalized=looksLikeLeet(pw);
+  if(commonWords.includes(pw.toLowerCase())||commonWords.includes(normalized)) tips.push("Не используй словарные слова или очевидные замены (P@ssw0rd).");
+  if(/(.)\1{2,}/.test(pw)) tips.push("Избегай длинных повторов.");
+  if(hasSequences(pw)) tips.push("Избегай последовательностей вроде 'abcd', '1234' или клавиатурных рядов.");
+  advice.textContent = tips.length
+  ? tips.join(" ")
+  : "Отлично — близко к «крепости». Храни его в менеджере паролей.";
+}
+
+pwInput.addEventListener("input",evaluatePassword);
+toggleBtn.addEventListener("click",()=>{
+  const isPassword=pwInput.type==="password";
+  pwInput.type=isPassword?"text":"password";
+  toggleBtn.textContent=isPassword?"Скрыть":"Показать";
+  pwInput.focus();
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+<script>
+particlesJS("particles-js", {
+  particles: {
+    number: { value: 80 },
+    color: { value: "#9333ea" },
+    shape: { type: "circle" },
+    opacity: { value: 0.5 },
+    size: { value: 3 },
+    move: { enable: true, speed: 1 }
+  },
+  interactivity: { detect_on: "canvas", events: { onhover: { enable: false } } },
+  retina_detect: true
+});
+</script>
+</body>
+</html>
