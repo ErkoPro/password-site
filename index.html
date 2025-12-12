@@ -5,6 +5,89 @@
   <title>PasswordCheckerFromErko</title>
   <link rel="icon" href="favicon.png">
   <style>
+body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;             
+  display: flex;
+  justify-content: center;   
+  align-items: center;       
+  background: linear-gradient(270deg, #1a0033, #3d0066, #6600cc, #9a00ff);
+  background-size: 800% 800%;
+  animation: gradientShift 20s ease infinite; 
+  font-family: 'Segoe UI', sans-serif;
+  color: #fff;
+}
+    
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.checker-container {
+  width: 90%;
+  max-width: 400px;
+  background: rgba(255, 255, 255, 0.05); 
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+  backdrop-filter: blur(8px); 
+}
+
+.checker-container input[type="password"] {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  margin-bottom: 15px;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+.checker-container input[type="password"]::placeholder {
+  color: #bbb;
+}
+
+/* Кнопка */
+.checker-container button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #7a00cc;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.checker-container button:hover {
+  background: #9a00ff;
+}
+
+
+@media (max-width: 768px) {
+  body {
+    flex-direction: column;   
+    justify-content: flex-start;
+    padding-top: 10vh;        
+  }
+
+  .checker-container {
+    width: 95%;
+    padding: 15px;
+  }
+
+  .checker-container input[type="password"],
+  .checker-container button {
+    font-size: 14px;
+    padding: 10px;
+  }
+}
+
     .card {
   transition: transform 0.4s ease, opacity 0.4s ease;
   opacity: 0.95;
@@ -243,3 +326,4 @@ particlesJS("particles-js", {
 </body>
 
 </html>
+
