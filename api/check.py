@@ -1,6 +1,7 @@
 import hashlib
 import math
 import requests
+import json
 
 def calculate_entropy(password):
     charset = 0
@@ -19,7 +20,8 @@ def check_breach(password):
     url = f"https://api.pwnedpasswords.com/range/{prefix}"
     try:
         res = requests.get(url, timeout=10)
-    except Exception:
+    except Exception as e:
+        print("Error in check_breach:", e)
         return 0
     if res.status_code != 200:
         return 0
@@ -34,13 +36,21 @@ def check_breach(password):
                 return 0
     return 0
 
-# Vercel serverless entrypoint expects a function named `handler`
+# Vercel serverless entrypoint
 def handler(request):
     try:
         if request.method != "POST":
-            return {"statusCode": 200, "body": {"message": "Send POST request to this endpoint (JSON: {\"password\":\"...\"})"}}
+            return {
+                "statusCode": 200,
+                "body": json.dumps({"message": "Send POST request with JSON: {\"password\":\"...\"}"})
+            }
 
-        data = request.json() or {}
+        # читаем тело запроса
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+        except Exception:
+            data = {}
+
         password = data.get("password", "")
 
         entropy = calculate_entropy(password)
@@ -59,11 +69,14 @@ def handler(request):
 
         return {
             "statusCode": 200,
-            "body": {
+            "body": json.dumps({
                 "entropy": entropy,
                 "strength": strength,
                 "breached": breached
-            }
+            })
         }
     except Exception as e:
-        return {"statusCode": 500, "body": {"error": "internal error", "detail": str(e)}}
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"error": "internal error", "detail": str(e)})
+}
