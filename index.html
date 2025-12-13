@@ -191,6 +191,17 @@ button:hover {
 </div>
 
     <script>
+      const form = document.querySelector("form");
+form.addEventListener("submit", function(event) {
+  event.preventDefault(); // блокируем перезагрузку
+  // твоя логика проверки пароля
+});
+
+      const form = document.querySelector("form");
+form.addEventListener("submit", function(event) {
+  event.preventDefault();   
+});
+
 const pwInput=document.getElementById("password");
 const toggleBtn=document.getElementById("toggleBtn");
 const meterFill=document.getElementById("meterFill");
@@ -325,3 +336,4 @@ particlesJS("particles-js", {
 </script>
 </body>
 </html>
+
